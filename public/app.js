@@ -49,6 +49,7 @@ async function cargarPronostico() {
         const datos = await respuesta.json();
         console.log(datos);
         pintarPronostico(datos.elementos[0]["12_00_ecmwf"].valorPronosticado);
+        pintarGraficoTemperatura(datos.elementos[0]["12_00_ecmwf"].valorPronosticado);
     } catch (error) {
         console.error(error);
     }
@@ -110,6 +111,24 @@ function obtenerIcono(estado) {
     }
 }
 
+function obtenerProximas24Horas(datos) {
+
+    const ahora = new Date();
+
+    const limite = new Date(
+        ahora.getTime() + (24 * 60 * 60 * 1000)
+    );
+
+    return datos.filter(item => {
+
+        const fecha = new Date(
+            item.fecha.replace(' ', 'T')
+        );
+
+        return fecha >= ahora && fecha <= limite;
+    });
+}
+
 function pintarPronostico(datos) {
 
     console.log(datos);
@@ -118,20 +137,25 @@ function pintarPronostico(datos) {
 
     contenedor.innerHTML = '';
 
-    datos.forEach(item => {
+    // Obtener solamente próximas 24 horas
+    const datos24h = obtenerProximas24Horas(datos);
+
+    datos24h.forEach(item => {
 
         const fecha = new Date(item.fecha.replace(' ', 'T'));
 
         const hora = fecha.toLocaleTimeString('es-CL', {
             hour: '2-digit',
-            minute: '2-digit'
+            minute: '2-digit',
+            hour12: false
         });
 
         const div = document.createElement('div');
 
         div.className = 'text-center';
 
-        div.style.minWidth = '65px';
+        div.style.width = '70px';
+        div.style.minWidth = '70px';
 
         div.innerHTML = `
             <small>${hora}</small>
@@ -140,10 +164,103 @@ function pintarPronostico(datos) {
                 <i class="bi bi-cloud-sun fs-4"></i>
             </div>
 
-            <strong>${parseFloat(item.valor).toFixed(1)}°</strong>
+            <strong>${parseFloat(item.valor).toFixed(1)}°C</strong>
         `;
 
         contenedor.appendChild(div);
+    });
+}
+
+let graficoTemperatura = null;
+
+function pintarGraficoTemperatura(datos) {
+
+    // Mismos datos que el pronóstico
+    const datos24h = obtenerProximas24Horas(datos);
+
+    const canvas = document.getElementById('graficoTemperatura');
+
+    const ancho = datos24h.length * 70;
+
+    canvas.style.width = `${ancho}px`;
+    canvas.style.height = '250px';
+
+    const labels = datos24h.map(item => {
+
+        const fecha = new Date(
+            item.fecha.replace(' ', 'T')
+        );
+
+        return fecha.toLocaleTimeString('es-CL', {
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    });
+
+    const temperaturas = datos24h.map(item =>
+        parseFloat(item.valor)
+    );
+
+    if (graficoTemperatura) {
+        graficoTemperatura.destroy();
+    }
+
+    graficoTemperatura = new Chart(canvas, {
+
+        type: 'line',
+
+        data: {
+            labels: labels,
+
+            datasets: [{
+                label: 'Temperatura',
+                data: temperaturas,
+
+                borderWidth: 2,
+                tension: 0.4,
+
+                pointRadius: 4,
+                pointHoverRadius: 6
+            }]
+        },
+
+        options: {
+
+            responsive: false,
+
+            plugins: {
+
+                legend: {
+                    display: false
+                },
+
+                tooltip: {
+
+                    callbacks: {
+
+                        label: function(context) {
+
+                            return `${context.parsed.y.toFixed(1)} °C`;
+
+                        }
+                    }
+                }
+            },
+
+            scales: {
+
+                x: {
+                    display: false
+                },
+
+                y: {
+                    title: {
+                        display: true,
+                        text: 'Temperatura °C',
+                    }
+                }
+            }
+        }
     });
 }
 
