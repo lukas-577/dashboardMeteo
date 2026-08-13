@@ -70,10 +70,15 @@ async function cargarClima(estacion = 'macul') {
 
         document.getElementById('estadoCielo').textContent =
             obtenerEstadoCielo(datos.datosEstaciones.datos[1]);
-        
-        document.getElementById('iconoClima').classList.add(
-            obtenerIcono(obtenerEstadoCielo(datos.datosEstaciones.datos[1]))
-        );
+
+        const estadoCielo = obtenerEstadoCielo(datos.datosEstaciones.datos[1]);
+
+        document.getElementById('estadoCielo').textContent = estadoCielo;
+
+        const iconoClima = document.getElementById('iconoClima');
+
+        iconoClima.className = `bi fs-1 ${obtenerIcono(estadoCielo)}`;
+       
 
     } catch (error) {
         console.error(error);
@@ -88,7 +93,7 @@ async function cargarPronostico(estacion = 'macul') {
         }
         const datos = await respuesta.json();
         console.log(datos);
-        pintarPronostico(datos.elementos[0]["12_00_ecmwf"].valorPronosticado);
+        pintarPronostico(datos.elementos[0]["12_00_ecmwf"].valorPronosticado , datos.elementos[6]["13_00_ecmwf"].valorPronosticado);
         pintarGraficoTemperatura(datos.elementos[0]["12_00_ecmwf"].valorPronosticado);
     } catch (error) {
         console.error(error);
@@ -110,7 +115,11 @@ function obtenerEstadoCielo(clima) {
             .replace(",", ".")
     ) || 0;
 
-    const hora = new Date(clima.momento.replace(" ", "T")).getHours();
+    const fecha = new Date(clima.momento.replace(" ", "T"));
+
+    fecha.setHours(fecha.getHours() - 4);
+
+    const hora = fecha.getHours();
 
     // Si está lloviendo ahora
     if (lluvia > 0) {
@@ -171,21 +180,26 @@ function obtenerProximas24Horas(datos) {
     });
 }
 
-function pintarPronostico(datos) {
+function pintarPronostico(datos, aguaAcumulada) {
 
     console.log(datos);
+    console.log(aguaAcumulada);
 
     const contenedor = document.getElementById('pronostico');
 
     contenedor.innerHTML = '';
 
-    // Obtener solamente próximas 24 horas
+    // Próximas 24 horas
     const datos24h = obtenerProximas24Horas(datos);
+    const datos24hAgua = obtenerProximas24Horas(aguaAcumulada);
 
     datos24h.forEach(item => {
 
-        const fecha = new Date(item.fecha.replace(' ', 'T'));
+        const fecha = new Date(
+            item.fecha.replace(' ', 'T')
+        );
 
+        // Restar 4 horas
         fecha.setHours(fecha.getHours() - 4);
 
         const hora = fecha.toLocaleTimeString('es-CL', {
@@ -193,6 +207,24 @@ function pintarPronostico(datos) {
             minute: '2-digit',
             hour12: false
         });
+
+        // Buscar la lluvia correspondiente a esta hora
+        const lluvia = datos24hAgua.find(agua => {
+
+            const fechaAgua = new Date(
+                agua.fecha.replace(' ', 'T')
+            );
+
+            fechaAgua.setHours(
+                fechaAgua.getHours() - 4
+            );
+
+            return fechaAgua.getTime() === fecha.getTime();
+        });
+
+        const mmLluvia = lluvia
+            ? parseFloat(lluvia.valor)
+            : 0;
 
         const div = document.createElement('div');
 
@@ -208,7 +240,16 @@ function pintarPronostico(datos) {
                 <i class="bi bi-cloud-sun fs-4"></i>
             </div>
 
-            <strong>${parseFloat(item.valor).toFixed(1)}°C</strong>
+            <strong>
+                ${parseFloat(item.valor).toFixed(1)}°C
+            </strong>
+
+            <div class="mt-1 small">
+                ${mmLluvia > 0
+                    ? `🌧️ ${mmLluvia.toFixed(2)} mm`
+                    : '☀️ 0 mm'
+                }
+            </div>
         `;
 
         contenedor.appendChild(div);
