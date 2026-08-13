@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="es">
     <head>
         <!-- Required meta tags -->
         <meta charset="utf-8">
@@ -13,40 +13,46 @@
     </head>
     <body>
 
-        <section class="vh-100" style="background-color: #4B515D;">
+        <section  style="background-color: #4B515D;">
             <div class="container py-5 h-100">
 
                 <div class="row d-flex justify-content-center align-items-center h-100">
-                    <div class="col-md-8 col-lg-6 col-xl-4">
+                
+                    
+                    <div class="col-md-8 col-lg-6 col-xl-10 m-2">
+                        <div class="col-md-4 col-lg-2 col-xl-2">
+                        <select id="selectorEstacion" class="form-select">
+                            <option value="sanjoseMaipo">San José Maipo</option>
+                            <option value="macul">Macul</option>
+                            <option value="laFlorida">La Florida</option>
+                        </select>
+                    </div>
+                    <div class="card" style="color: #4B515D; border-radius: 35px;">
+                        <div class="card-body p-4">
 
-                        <div class="card" style="color: #4B515D; border-radius: 35px;">
-                            <div class="card-body p-4">
-
-                                <div class="d-flex">
-                                <h6 class="flex-grow-1" id="nombreEstacion">Estación</h6>
-                                <h6 id ="hora">12:00</h6>
-                                </div>
-
-                                <div class="d-flex flex-column text-center mt-5 mb-4">
-                                <h6 class="display-4 mb-0 font-weight-bold" style="color: #1C2331;" id="temperatura">23°C</h6>
-                                <span class="small" style="color: #868B94" id="estadoCielo">Tormentas</span>
-                                </div>
-
-                                <div class="d-flex align-items-center">
-                                <div class="flex-grow-1" style="font-size: 1rem;">
-                                    <div><i class="bi bi-wind"></i> <span class="ms-1" id="viento"> 40 km/h </span></div>
-                                    <div><i class="bi bi-moisture"></i> <span class="ms-1" id="humedad">50 %</span></div>
-                                    <div><i class="bi bi-brightness-high"></i> <span class="ms-1" id="radiacion">1000 Watt/m2</span></div>
-                                    
-                                </div>
-                                <div>
-                                    <i id="iconoClima" class="bi fs-1"></i>
-                                </div>
-                                </div>
-
+                            <div class="d-flex">
+                            <h6 class="flex-grow-1" id="nombreEstacion">Estación</h6>
+                            <h6 id ="hora">12:00</h6>
                             </div>
-                        </div>
 
+                            <div class="d-flex flex-column text-center mt-5 mb-4">
+                            <h6 class="display-4 mb-0 font-weight-bold" style="color: #1C2331;" id="temperatura">23°C</h6>
+                            <span class="small" style="color: #868B94" id="estadoCielo">Tormentas</span>
+                            </div>
+
+                            <div class="d-flex align-items-center">
+                            <div class="flex-grow-1" style="font-size: 1rem;">
+                                <div><i class="bi bi-wind"></i> <span class="ms-1" id="viento"> 40 km/h </span></div>
+                                <div><i class="bi bi-moisture"></i> <span class="ms-1" id="humedad">50 %</span></div>
+                                <div><i class="bi bi-brightness-high"></i> <span class="ms-1" id="radiacion">1000 Watt/m2</span></div>
+                                
+                            </div>
+                            <div>
+                                <i id="iconoClima" class="bi fs-1"></i>
+                            </div>
+                            </div>
+
+                        </div>
                     </div>
                     <div class="card mt-4" style="color: #4B515D; border-radius: 35px;">
                         <div class="card-body p-4">
@@ -59,11 +65,11 @@
 
                                     <!-- Horas -->
                                     <div id="pronostico"class="d-flex">
-                                        
+
                                     </div>
 
                                     <!-- Gráfico -->
-                                    <div style="height: 250px; margin-top: 15px;">
+                                    <div >
                                         <canvas id="graficoTemperatura"></canvas>
                                     </div>
 
@@ -73,6 +79,9 @@
 
                         </div>
                     </div>
+
+                    
+
                 </div>
                 
             </div>

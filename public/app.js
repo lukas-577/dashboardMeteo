@@ -1,6 +1,25 @@
-async function cargarClima() {
+function corregirUTF8(texto) {
+
     try {
-        const respuesta = await fetch('http://localhost:3000/api/clima/macul')
+        return decodeURIComponent(
+            Array.prototype.map.call(texto, c =>
+                '%' + c.charCodeAt(0).toString(16).padStart(2, '0')
+            ).join('')
+        );
+    } catch (e) {
+        return texto;
+    }
+}
+
+const estaciones ={
+    sanjoseMaipo: 'sanjose-maipo',
+    macul: 'macul',
+    laFlorida: 'la-florida'
+}
+
+async function cargarClima(estacion = 'macul') {
+    try {
+        const respuesta = await fetch(`http://localhost:3000/api/clima/${estacion}`)
 
         if (!respuesta.ok) {
             throw new Error('Error obteniendo datos');
@@ -10,11 +29,32 @@ async function cargarClima() {
 
         console.log(datos);
 
+        const nombre = datos.datosEstaciones.estacion.nombreEstacion;
+
         document.getElementById('nombreEstacion').textContent =
-            datos.datosEstaciones.estacion.nombreEstacion ;
+            corregirUTF8(nombre);
+
+        const momento = datos.datosEstaciones.datos[1].momento;
+
+        const fecha = new Date(momento.replace(' ', 'T'));
+
+        // Restar 4 horas
+        fecha.setHours(fecha.getHours() - 4);
+
+        const fechaFormateada = fecha.toLocaleDateString('es-CL', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric'
+        });
+
+        const horaFormateada = fecha.toLocaleTimeString('es-CL', {
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false
+        });
 
         document.getElementById('hora').textContent =
-            datos.datosEstaciones.datos[1].momento;
+            `${fechaFormateada} ${horaFormateada}`;
 
         document.getElementById('temperatura').textContent =
             datos.datosEstaciones.datos[1].temperatura;
@@ -40,9 +80,9 @@ async function cargarClima() {
     }
 }
 
-async function cargarPronostico() {
+async function cargarPronostico(estacion = 'macul') {
     try {
-        const respuesta = await fetch('http://localhost:3000/api/clima/estimacion/macul')
+        const respuesta = await fetch(`http://localhost:3000/api/clima/estimacion/${estacion}`)
         if (!respuesta.ok) {
             throw new Error('Error obteniendo datos');
         }
@@ -125,6 +165,8 @@ function obtenerProximas24Horas(datos) {
             item.fecha.replace(' ', 'T')
         );
 
+        fecha.setHours(fecha.getHours() + 4);
+
         return fecha >= ahora && fecha <= limite;
     });
 }
@@ -144,6 +186,8 @@ function pintarPronostico(datos) {
 
         const fecha = new Date(item.fecha.replace(' ', 'T'));
 
+        fecha.setHours(fecha.getHours() - 4);
+
         const hora = fecha.toLocaleTimeString('es-CL', {
             hour: '2-digit',
             minute: '2-digit',
@@ -154,7 +198,7 @@ function pintarPronostico(datos) {
 
         div.className = 'text-center';
 
-        div.style.width = '70px';
+        div.style.width = '72px';
         div.style.minWidth = '70px';
 
         div.innerHTML = `
@@ -180,6 +224,14 @@ function pintarGraficoTemperatura(datos) {
 
     const canvas = document.getElementById('graficoTemperatura');
 
+    if (graficoTemperatura) {
+        graficoTemperatura.destroy();
+        graficoTemperatura = null;
+    }
+
+    canvas.removeAttribute('width');
+    canvas.removeAttribute('height');
+
     const ancho = datos24h.length * 70;
 
     canvas.style.width = `${ancho}px`;
@@ -201,9 +253,7 @@ function pintarGraficoTemperatura(datos) {
         parseFloat(item.valor)
     );
 
-    if (graficoTemperatura) {
-        graficoTemperatura.destroy();
-    }
+
 
     graficoTemperatura = new Chart(canvas, {
 
@@ -264,5 +314,12 @@ function pintarGraficoTemperatura(datos) {
     });
 }
 
+document.getElementById('selectorEstacion')
+    .addEventListener('change', function () {
+
+        cargarClima(this.value);
+        cargarPronostico(this.value);
+
+    });
 cargarClima();
 cargarPronostico();
